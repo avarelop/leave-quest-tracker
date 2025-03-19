@@ -67,10 +67,16 @@ const CalendarPage = () => {
           </p>
         </div>
         
-        <VacationCalendar
-          requests={mockRequests}
-          isManager={isManager}
-        />
+        <div className="flex justify-center">
+          <div className="w-full max-w-4xl">
+            <VacationCalendar
+              requests={mockRequests}
+              isManager={isManager}
+              className="shadow-md rounded-lg"
+              calendarClassName="p-4 md:p-6 lg:p-8"
+            />
+          </div>
+        </div>
       </div>
     </Layout>
   );

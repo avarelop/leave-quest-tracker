@@ -30,6 +30,8 @@ import {
 interface VacationCalendarProps {
   requests: RequestData[];
   isManager?: boolean;
+  className?: string;
+  calendarClassName?: string;
 }
 
 // Define departments for demo purposes
@@ -53,7 +55,9 @@ const employeeDepartments: Record<string, string> = {
 
 export const VacationCalendar: React.FC<VacationCalendarProps> = ({ 
   requests,
-  isManager = false
+  isManager = false,
+  className,
+  calendarClassName
 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -154,7 +158,7 @@ export const VacationCalendar: React.FC<VacationCalendarProps> = ({
   };
 
   return (
-    <Card className="w-full">
+    <Card className={cn("w-full", className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle>Vacation Calendar</CardTitle>
         {isManager && (
@@ -318,7 +322,7 @@ export const VacationCalendar: React.FC<VacationCalendarProps> = ({
           selected={date}
           onSelect={setDate}
           onDayClick={handleDayClick}
-          className="rounded-md p-3 pointer-events-auto mx-auto"
+          className={cn("rounded-md p-3 pointer-events-auto mx-auto", calendarClassName)}
           modifiers={{
             hasVacation: Object.keys(vacationDates).map(dateStr => new Date(dateStr)),
           }}
