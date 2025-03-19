@@ -6,6 +6,7 @@ import { RequestData } from '@/components/dashboard/RequestCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { VacationCalendar } from '@/components/calendar/VacationCalendar';
 
 // Mock data for demo purposes
 const mockRequests: RequestData[] = [
@@ -34,7 +35,8 @@ const mockRequests: RequestData[] = [
     endDate: new Date('2023-08-25'),
     status: 'denied',
     reason: 'Vacation cancelled due to urgent project deadline.',
-    requestedOn: new Date('2023-07-20')
+    requestedOn: new Date('2023-07-20'),
+    denialReason: 'We have a critical project deadline during this period and require all team members to be available.'
   },
   {
     id: '4',
@@ -140,6 +142,11 @@ const Dashboard = () => {
                   </Tabs>
                 </CardContent>
               </Card>
+              
+              <VacationCalendar 
+                requests={mockRequests}
+                isManager={true}
+              />
             </>
           ) : (
             <>

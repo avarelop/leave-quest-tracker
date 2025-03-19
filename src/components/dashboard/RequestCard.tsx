@@ -1,11 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, User, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { StatusBadge, RequestStatus } from './StatusBadge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface RequestData {
   id: string;
@@ -19,6 +27,7 @@ export interface RequestData {
   status: RequestStatus;
   reason: string;
   requestedOn: Date;
+  denialReason?: string;
 }
 
 interface RequestCardProps {
@@ -26,6 +35,7 @@ interface RequestCardProps {
   isManager?: boolean;
   onApprove?: (id: string) => void;
   onDeny?: (id: string) => void;
+  onChangeStatus?: (id: string) => void;
   className?: string;
 }
 
@@ -34,6 +44,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
   isManager = false,
   onApprove,
   onDeny,
+  onChangeStatus,
   className,
 }) => {
   const duration = Math.ceil((request.endDate.getTime() - request.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -49,15 +60,35 @@ export const RequestCard: React.FC<RequestCardProps> = ({
       
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center space-x-2 mb-1">
-              {isManager && (
-                <div className="flex items-center">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="ml-1 font-medium">{request.employee.name}</span>
-                </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center space-x-2">
+                {isManager && (
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="ml-1 font-medium">{request.employee.name}</span>
+                  </div>
+                )}
+                <StatusBadge status={request.status} />
+              </div>
+              
+              {isManager && request.status !== 'pending' && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreVertical className="h-4 w-4" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onChangeStatus?.(request.id)}>
+                      Change status
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
-              <StatusBadge status={request.status} />
             </div>
             
             <div className="flex items-center space-x-1 text-sm text-muted-foreground mb-4">
@@ -71,6 +102,15 @@ export const RequestCard: React.FC<RequestCardProps> = ({
             <p className="text-sm text-muted-foreground">
               {request.reason.length > 120 ? `${request.reason.substring(0, 120)}...` : request.reason}
             </p>
+            
+            {request.status === 'denied' && request.denialReason && (
+              <div className="mt-3 p-2 bg-status-denied/5 border border-status-denied/10 rounded-md">
+                <p className="text-xs font-medium text-status-denied mb-1">Denial reason:</p>
+                <p className="text-xs text-muted-foreground">
+                  {request.denialReason}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

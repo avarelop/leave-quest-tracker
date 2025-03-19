@@ -1,6 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { RequestCard, RequestData } from './RequestCard';
+import { RejectReasonModal } from './RejectReasonModal';
+import { StatusChangeModal } from './StatusChangeModal';
+import { RequestStatus } from './StatusBadge';
 import { toast } from 'sonner';
 
 interface RequestListProps {
@@ -14,19 +17,69 @@ export const RequestList: React.FC<RequestListProps> = ({
   isManager = false,
   emptyMessage = "No requests found",
 }) => {
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  
+  // Create a mutable copy of the requests that we can update
+  const [requestsData, setRequestsData] = useState<RequestData[]>(requests);
+  
+  const selectedRequest = selectedRequestId 
+    ? requestsData.find(req => req.id === selectedRequestId) 
+    : null;
+
   const handleApprove = (id: string) => {
-    toast.success('Request approved successfully');
+    // Update the request status in our local state
+    setRequestsData(prevRequests => 
+      prevRequests.map(req => 
+        req.id === id ? { ...req, status: 'approved' } : req
+      )
+    );
+    
     // Here you would typically call an API to approve the request
+    toast.success('Request approved successfully');
+    // In a real application, you would send an email notification here
     console.log(`Approving request ${id}`);
   };
 
   const handleDeny = (id: string) => {
-    toast.error('Request denied');
-    // Here you would typically call an API to deny the request
-    console.log(`Denying request ${id}`);
+    // Open the rejection reason modal
+    setSelectedRequestId(id);
+    setRejectModalOpen(true);
+  };
+  
+  const handleChangeStatus = (id: string) => {
+    setSelectedRequestId(id);
+    setStatusChangeModalOpen(true);
   };
 
-  if (requests.length === 0) {
+  const handleRejectSubmit = (id: string, reason: string) => {
+    // Update the request status and add the denial reason
+    setRequestsData(prevRequests => 
+      prevRequests.map(req => 
+        req.id === id ? { ...req, status: 'denied', denialReason: reason } : req
+      )
+    );
+    
+    // Here you would typically call an API to deny the request
+    console.log(`Denying request ${id} with reason: ${reason}`);
+    // In a real application, you would send an email with the reason here
+  };
+  
+  const handleStatusChange = (id: string, newStatus: RequestStatus) => {
+    // Update the request status in our local state
+    setRequestsData(prevRequests => 
+      prevRequests.map(req => 
+        req.id === id ? { ...req, status: newStatus } : req
+      )
+    );
+    
+    // Here you would typically call an API to update the status
+    console.log(`Changing request ${id} status to ${newStatus}`);
+    // In a real application, you would send an email notification here
+  };
+
+  if (requestsData.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
         <p className="text-muted-foreground">{emptyMessage}</p>
@@ -35,17 +88,39 @@ export const RequestList: React.FC<RequestListProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {requests.map((request) => (
-        <RequestCard
-          key={request.id}
-          request={request}
-          isManager={isManager}
-          onApprove={handleApprove}
-          onDeny={handleDeny}
-          className="animate-slide-up"
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {requestsData.map((request) => (
+          <RequestCard
+            key={request.id}
+            request={request}
+            isManager={isManager}
+            onApprove={handleApprove}
+            onDeny={handleDeny}
+            onChangeStatus={handleChangeStatus}
+            className="animate-slide-up"
+          />
+        ))}
+      </div>
+      
+      {selectedRequest && (
+        <>
+          <RejectReasonModal
+            isOpen={rejectModalOpen}
+            onClose={() => setRejectModalOpen(false)}
+            requestId={selectedRequest.id}
+            employeeName={selectedRequest.employee.name}
+            onSubmit={handleRejectSubmit}
+          />
+          
+          <StatusChangeModal
+            isOpen={statusChangeModalOpen}
+            onClose={() => setStatusChangeModalOpen(false)}
+            request={selectedRequest}
+            onStatusChange={handleStatusChange}
+          />
+        </>
+      )}
+    </>
   );
 };
