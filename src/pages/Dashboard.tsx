@@ -7,6 +7,34 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { VacationCalendar } from '@/components/calendar/VacationCalendar';
+import { Input } from '@/components/ui/input';
+import { Search, Filter } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Define departments for demo purposes
+const departments = [
+  'Engineering',
+  'Marketing',
+  'Sales',
+  'HR',
+  'Finance',
+  'Operations'
+];
+
+// For demo purposes, assign departments to employees
+const employeeDepartments: Record<string, string> = {
+  '101': 'Engineering',
+  '102': 'Marketing',
+  '103': 'Sales',
+  '104': 'HR',
+  '105': 'Engineering',
+};
 
 // Mock data for demo purposes
 const mockRequests: RequestData[] = [
@@ -64,11 +92,37 @@ const Dashboard = () => {
   const [isManager, setIsManager] = useState<boolean>(true); // Default to manager view for demo
   const [activeTab, setActiveTab] = useState<string>('pending');
   
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  
+  // Apply filters to requests
+  const filteredRequests = React.useMemo(() => {
+    return mockRequests.filter(req => {
+      // Text search filter
+      if (searchTerm && !req.employee.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+      
+      // Department filter
+      if (departmentFilter && employeeDepartments[req.employee.id] !== departmentFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [searchTerm, departmentFilter]);
+  
   // Filter requests based on status and role
-  const pendingRequests = mockRequests.filter(req => req.status === 'pending');
-  const approvedRequests = mockRequests.filter(req => req.status === 'approved');
-  const deniedRequests = mockRequests.filter(req => req.status === 'denied');
-  const myRequests = mockRequests.filter(req => req.employee.id === '101'); // Assume logged in user is John Doe
+  const pendingRequests = filteredRequests.filter(req => req.status === 'pending');
+  const approvedRequests = filteredRequests.filter(req => req.status === 'approved');
+  const deniedRequests = filteredRequests.filter(req => req.status === 'denied');
+  const myRequests = filteredRequests.filter(req => req.employee.id === '101'); // Assume logged in user is John Doe
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setDepartmentFilter('');
+  };
 
   return (
     <Layout>
@@ -96,6 +150,43 @@ const Dashboard = () => {
         <div className="grid gap-6">
           {isManager ? (
             <>
+              {/* Filter section for manager */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by employee name..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="w-full md:w-52">
+                  <Select
+                    value={departmentFilter}
+                    onValueChange={setDepartmentFilter}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Departments" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Departments</SelectItem>
+                      {departments.map(dept => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={resetFilters}
+                  className="shrink-0"
+                  disabled={!searchTerm && !departmentFilter}
+                >
+                  Reset Filters
+                </Button>
+              </div>
+
               <Card className="overflow-hidden">
                 <CardHeader className="pb-4">
                   <CardTitle>Team Leave Requests</CardTitle>
@@ -121,21 +212,33 @@ const Dashboard = () => {
                         <RequestList 
                           requests={pendingRequests} 
                           isManager={true}
-                          emptyMessage="No pending requests found."
+                          emptyMessage={
+                            searchTerm || departmentFilter 
+                              ? "No pending requests match your filters." 
+                              : "No pending requests found."
+                          }
                         />
                       </TabsContent>
                       <TabsContent value="approved" className="mt-0">
                         <RequestList 
                           requests={approvedRequests} 
                           isManager={true}
-                          emptyMessage="No approved requests found."
+                          emptyMessage={
+                            searchTerm || departmentFilter
+                              ? "No approved requests match your filters."
+                              : "No approved requests found."
+                          }
                         />
                       </TabsContent>
                       <TabsContent value="denied" className="mt-0">
                         <RequestList 
                           requests={deniedRequests} 
                           isManager={true}
-                          emptyMessage="No denied requests found."
+                          emptyMessage={
+                            searchTerm || departmentFilter
+                              ? "No denied requests match your filters."
+                              : "No denied requests found."
+                          }
                         />
                       </TabsContent>
                     </div>
@@ -144,7 +247,7 @@ const Dashboard = () => {
               </Card>
               
               <VacationCalendar 
-                requests={mockRequests}
+                requests={filteredRequests}
                 isManager={true}
               />
             </>
