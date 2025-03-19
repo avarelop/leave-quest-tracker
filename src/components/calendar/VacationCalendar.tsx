@@ -73,28 +73,30 @@ export const VacationCalendar: React.FC<VacationCalendarProps> = ({
             hasVacation: "bg-primary/10 text-primary font-medium",
           }}
           components={{
-            Day: ({ day, ...props }) => {
-              const vacations = getVacationsForDay(day);
+            Day: (props) => {
+              // The date property contains the actual day being rendered
+              const date = props.date;
+              const vacations = getVacationsForDay(date);
               const hasVacations = vacations.length > 0;
               
               return (
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
+                      {...props}
                       className={cn(
                         props.className,
                         hasVacations && "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full"
                       )}
-                      {...props}
                     >
-                      {format(day, "d")}
+                      {format(date, "d")}
                     </button>
                   </PopoverTrigger>
                   {hasVacations && (
                     <PopoverContent className="w-80 p-0" align="center">
                       <div className="p-4">
                         <h3 className="font-medium">
-                          {format(day, "MMMM d, yyyy")}
+                          {format(date, "MMMM d, yyyy")}
                         </h3>
                         <div className="mt-2 space-y-2">
                           {vacations.map((vacation, index) => (
