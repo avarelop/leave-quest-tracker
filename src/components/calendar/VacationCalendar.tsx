@@ -7,6 +7,7 @@ import { RequestData } from '../dashboard/RequestCard';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { DayProps } from 'react-day-picker';
 
 interface VacationCalendarProps {
   requests: RequestData[];
@@ -73,7 +74,7 @@ export const VacationCalendar: React.FC<VacationCalendarProps> = ({
             hasVacation: "bg-primary/10 text-primary font-medium",
           }}
           components={{
-            Day: (props) => {
+            Day: (props: DayProps) => {
               // The date property contains the actual day being rendered
               const date = props.date;
               const vacations = getVacationsForDay(date);
@@ -83,9 +84,13 @@ export const VacationCalendar: React.FC<VacationCalendarProps> = ({
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
-                      {...props}
+                      onClick={props.onClick}
+                      onMouseEnter={props.onMouseEnter}
+                      onMouseLeave={props.onMouseLeave}
+                      disabled={props.disabled}
+                      tabIndex={props.tabIndex}
                       className={cn(
-                        props.className,
+                        "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
                         hasVacations && "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full"
                       )}
                     >
