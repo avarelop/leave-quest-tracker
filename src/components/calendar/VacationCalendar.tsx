@@ -74,9 +74,8 @@ export const VacationCalendar: React.FC<VacationCalendarProps> = ({
             hasVacation: "bg-primary/10 text-primary font-medium",
           }}
           components={{
-            Day: (props: DayProps) => {
+            Day: ({ date, ...props }: DayProps & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
               // The date property contains the actual day being rendered
-              const date = props.date;
               const vacations = getVacationsForDay(date);
               const hasVacations = vacations.length > 0;
               
@@ -84,11 +83,7 @@ export const VacationCalendar: React.FC<VacationCalendarProps> = ({
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
-                      onClick={props.onClick}
-                      onMouseEnter={props.onMouseEnter}
-                      onMouseLeave={props.onMouseLeave}
-                      disabled={props.disabled}
-                      tabIndex={props.tabIndex}
+                      {...props}
                       className={cn(
                         "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
                         hasVacations && "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full"
