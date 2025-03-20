@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, X, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -13,12 +12,25 @@ import {
 import { Button } from '@/components/ui/button';
 import { RequestStatus } from './StatusBadge';
 import { RequestData } from './RequestCard';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+
+const reasonFormSchema = z.object({
+  reason: z.string().min(10, {
+    message: "Rejection reason must be at least 10 characters.",
+  }),
+});
+
+type ReasonFormValues = z.infer<typeof reasonFormSchema>;
 
 interface StatusChangeModalProps {
   isOpen: boolean;
   onClose: () => void;
   request: RequestData;
-  onStatusChange: (requestId: string, newStatus: RequestStatus) => void;
+  onStatusChange: (requestId: string, newStatus: RequestStatus, reason?: string) => void;
 }
 
 export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
@@ -27,7 +39,23 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   request,
   onStatusChange,
 }) => {
+  const [showReasonForm, setShowReasonForm] = useState(false);
+  
+  const form = useForm<ReasonFormValues>({
+    resolver: zodResolver(reasonFormSchema),
+    defaultValues: {
+      reason: '',
+    },
+  });
+  
   const handleStatusChange = (newStatus: RequestStatus) => {
+    // If changing to denied from approved, show the reason form
+    if (newStatus === 'denied' && request.status === 'approved') {
+      setShowReasonForm(true);
+      return;
+    }
+    
+    // Otherwise, proceed with the status change
     onStatusChange(request.id, newStatus);
     onClose();
     
@@ -35,10 +63,74 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
     toast.success(`Vacation request for ${request.employee.name} was ${action}`);
   };
   
+  const handleReasonSubmit = (values: ReasonFormValues) => {
+    onStatusChange(request.id, 'denied', values.reason);
+    form.reset();
+    onClose();
+    toast.success(`Vacation request for ${request.employee.name} was denied`);
+  };
+  
   // Don't show current status as an option
   const showApprove = request.status !== 'approved';
   const showPending = request.status !== 'pending';
   const showDeny = request.status !== 'denied';
+
+  if (showReasonForm) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) {
+          setShowReasonForm(false);
+          onClose();
+        }
+      }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Deny Vacation Request</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for denying {request.employee.name}'s vacation request.
+              This will be included in the notification email.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleReasonSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason for denial</FormLabel>
+                    <Textarea 
+                      placeholder="Please explain why this vacation request is being denied..."
+                      className="min-h-[120px]"
+                      {...field}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowReasonForm(false)}
+                >
+                  Back
+                </Button>
+                <Button 
+                  type="submit"
+                  className="bg-status-denied hover:bg-status-denied/90"
+                >
+                  Deny Request
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

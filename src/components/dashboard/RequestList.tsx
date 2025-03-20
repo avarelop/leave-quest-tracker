@@ -62,15 +62,20 @@ export const RequestList: React.FC<RequestListProps> = ({
     console.log(`Denying request ${id} with reason: ${reason}`);
   };
   
-  const handleStatusChange = (id: string, newStatus: RequestStatus) => {
+  const handleStatusChange = (id: string, newStatus: RequestStatus, reason?: string) => {
     // Update the request status in our local state
     setRequestsData(prevRequests => 
       prevRequests.map(req => 
-        req.id === id ? { ...req, status: newStatus } : req
+        req.id === id ? { 
+          ...req, 
+          status: newStatus,
+          // Add denial reason if provided
+          ...(reason ? { denialReason: reason } : {})
+        } : req
       )
     );
     
-    console.log(`Changing request ${id} status to ${newStatus}`);
+    console.log(`Changing request ${id} status to ${newStatus}${reason ? ` with reason: ${reason}` : ''}`);
   };
 
   // Update component to handle empty requests array properly
