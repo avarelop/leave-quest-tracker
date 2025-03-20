@@ -49,6 +49,11 @@ const App = () => (
                 <RequestForm />
               </ProtectedRoute>
             } />
+            <Route path="/request-form" element={
+              <ProtectedRoute>
+                <RequestForm />
+              </ProtectedRoute>
+            } />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />

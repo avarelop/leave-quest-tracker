@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { 
   Calendar,
   Home, 
-  PlusCircle, 
   User, 
   LayoutDashboard,
   LogOut
@@ -91,14 +90,6 @@ export const Header = () => {
             </nav>
 
             <div className="flex items-center space-x-2">
-              {/* Only show new request button when authenticated */}
-              <Link to="/request">
-                <Button className="animate-slide-up">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  {!isMobile && "New Request"}
-                </Button>
-              </Link>
-              
               {/* User profile dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -154,13 +145,6 @@ export const Header = () => {
               <span className="text-xs mt-1">{link.name}</span>
             </Link>
           ))}
-          <Link 
-            to="/request" 
-            className="flex flex-col items-center p-2 text-primary rounded-md"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span className="text-xs mt-1">Request</span>
-          </Link>
         </nav>
       )}
     </header>
