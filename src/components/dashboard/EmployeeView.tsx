@@ -15,8 +15,8 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
   onRequestStatusChange 
 }) => {
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>My Leave Requests</CardTitle>
         </CardHeader>
@@ -34,7 +34,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
       <VacationCalendar 
         requests={myRequests.filter(req => req.status === 'approved')}
         isManager={false}
-        className="max-w-4xl mx-auto"
+        className="h-full"
         calendarClassName="w-full"
       />
     </div>
