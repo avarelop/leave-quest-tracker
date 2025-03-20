@@ -67,13 +67,13 @@ const CalendarPage = () => {
           </p>
         </div>
         
-        <div className="flex justify-center">
-          <div className="w-full max-w-4xl">
+        <div className="flex justify-center w-full">
+          <div className="w-full lg:w-[90%] xl:w-[80%]">
             <VacationCalendar
               requests={mockRequests}
               isManager={isManager}
               className="shadow-md rounded-lg"
-              calendarClassName="p-4 md:p-6 lg:p-8"
+              calendarClassName="p-4 md:p-8 lg:p-8 text-lg scale-110 md:scale-125 lg:scale-125 transform-gpu mx-auto"
             />
           </div>
         </div>
