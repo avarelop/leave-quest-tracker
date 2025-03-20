@@ -16,7 +16,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Calendar view for employees - now on the left */}
+      {/* Calendar view for employees - on the left */}
       <VacationCalendar 
         requests={myRequests.filter(req => req.status === 'approved')}
         isManager={false}
