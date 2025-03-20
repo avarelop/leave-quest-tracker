@@ -5,7 +5,7 @@ import { RequestList } from '@/components/dashboard/RequestList';
 import { RequestData } from '@/components/dashboard/RequestCard';
 import { VacationCalendar } from '@/components/calendar/VacationCalendar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Calendar, Clock, User } from 'lucide-react';
+import { Calendar, Clock, User, BarChart } from 'lucide-react';
 
 interface EmployeeViewProps {
   myRequests: RequestData[];
@@ -23,6 +23,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
     totalDays: 25,
     usedDays: 0,
     pendingDays: 0,
+    remainingDays: 25, // Initialize remaining days
   });
   
   // Filter requests by status for the tabs
@@ -53,10 +54,14 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
       }
     });
     
+    // Calculate remaining days based on total, used, and pending
+    const remainingDays = 25 - usedDays - pendingDays;
+    
     setLeaveBalance({
       totalDays: 25, // Fixed total for demo
       usedDays,
-      pendingDays
+      pendingDays,
+      remainingDays // Add remaining days to the state
     });
   }, [myRequests]);
 
@@ -84,7 +89,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
             <CardTitle>Leave Balance</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-6">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col items-center justify-center p-4 rounded-md bg-secondary">
                 <Calendar className="h-6 w-6 text-primary mb-1" />
                 <div className="text-2xl font-bold">{leaveBalance.totalDays}</div>
@@ -100,6 +105,11 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
                 <div className="text-2xl font-bold">{leaveBalance.usedDays}</div>
                 <div className="text-xs text-muted-foreground text-center">Used</div>
               </div>
+              <div className="flex flex-col items-center justify-center p-4 rounded-md bg-secondary">
+                <BarChart className="h-6 w-6 text-green-500 mb-1" />
+                <div className="text-2xl font-bold">{leaveBalance.remainingDays}</div>
+                <div className="text-xs text-muted-foreground text-center">Remaining</div>
+              </div>
             </div>
             
             <div className="relative pt-2">
@@ -114,7 +124,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
                 />
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {leaveBalance.totalDays - leaveBalance.usedDays - leaveBalance.pendingDays} days remaining
+                {leaveBalance.remainingDays} days remaining
               </div>
             </div>
           </CardContent>
