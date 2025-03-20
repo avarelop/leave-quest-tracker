@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Calendar, Home, PlusCircle, User } from 'lucide-react';
+import { Calendar, Home, PlusCircle, User, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -23,7 +23,8 @@ export const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navLinks = [
-    { name: 'Dashboard', path: '/', icon: <Home className="h-4 w-4" /> },
+    { name: 'Home', path: '/', icon: <Home className="h-4 w-4" /> },
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
     { name: 'Calendar', path: '/calendar', icon: <Calendar className="h-4 w-4" /> },
     { name: 'Profile', path: '/profile', icon: <User className="h-4 w-4" /> }
   ];
