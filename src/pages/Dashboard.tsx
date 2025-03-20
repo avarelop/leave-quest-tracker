@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
@@ -10,9 +9,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { departments } from '@/components/dashboard/MockData';
 import { toast } from 'sonner';
+import { RequestStatus } from '@/components/dashboard/StatusBadge';
 
 // Mock vacation requests for Alvaro
-const mockVacationRequests = [
+const mockVacationRequests: RequestData[] = [
   {
     id: '1',
     employee: {
@@ -22,7 +22,7 @@ const mockVacationRequests = [
     startDate: new Date('2024-04-10'),
     endDate: new Date('2024-04-15'),
     reason: 'Family vacation',
-    status: 'approved',
+    status: 'approved' as RequestStatus,
     requestedOn: new Date('2024-03-01'),
     createdAt: new Date('2024-03-01')
   },
@@ -35,7 +35,7 @@ const mockVacationRequests = [
     startDate: new Date('2024-05-20'),
     endDate: new Date('2024-05-22'),
     reason: 'Personal days',
-    status: 'pending',
+    status: 'pending' as RequestStatus,
     requestedOn: new Date('2024-03-15'),
     createdAt: new Date('2024-03-15')
   },
@@ -48,7 +48,7 @@ const mockVacationRequests = [
     startDate: new Date('2024-02-05'),
     endDate: new Date('2024-02-07'),
     reason: 'Medical appointment',
-    status: 'denied',
+    status: 'denied' as RequestStatus,
     requestedOn: new Date('2024-01-20'),
     createdAt: new Date('2024-01-20')
   }
@@ -68,7 +68,7 @@ const mapVacationRequestToRequestData = (
     startDate: new Date(vacationRequest.start_date),
     endDate: new Date(vacationRequest.end_date),
     reason: vacationRequest.reason,
-    status: vacationRequest.status,
+    status: vacationRequest.status as RequestStatus,
     requestedOn: new Date(vacationRequest.created_at),
     createdAt: new Date(vacationRequest.created_at)
   };
@@ -161,7 +161,8 @@ const Dashboard = () => {
               startDate: new Date(req.startDate),
               endDate: new Date(req.endDate),
               requestedOn: new Date(req.requestedOn),
-              createdAt: new Date(req.createdAt)
+              createdAt: new Date(req.createdAt),
+              status: req.status as RequestStatus
             }));
             setRequests(fixedDates);
           } else {
@@ -332,7 +333,7 @@ const Dashboard = () => {
         startDate: newRequestData.startDate,
         endDate: newRequestData.endDate,
         reason: newRequestData.reason,
-        status: 'pending',
+        status: 'pending' as RequestStatus,
         requestedOn: now,
         createdAt: now
       };
