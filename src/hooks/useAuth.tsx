@@ -74,18 +74,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign up function
   const signUp = async (name: string, email: string, password: string): Promise<void> => {
     try {
+      // Split name into first and last name
+      const nameParts = name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+      
+      // Use user_metadata instead of data.first_name/last_name
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            first_name: name.split(' ')[0],
-            last_name: name.split(' ').slice(1).join(' ') || '',
+            first_name: firstName,
+            last_name: lastName,
           },
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error signing up:', error);
+        throw error;
+      }
     } catch (error) {
       console.error('Error signing up:', error);
       throw error;
