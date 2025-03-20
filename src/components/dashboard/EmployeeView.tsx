@@ -6,9 +6,13 @@ import { RequestData } from '@/components/dashboard/RequestCard';
 
 interface EmployeeViewProps {
   myRequests: RequestData[];
+  onRequestStatusChange?: (updatedRequest: RequestData) => void;
 }
 
-export const EmployeeView: React.FC<EmployeeViewProps> = ({ myRequests }) => {
+export const EmployeeView: React.FC<EmployeeViewProps> = ({ 
+  myRequests, 
+  onRequestStatusChange 
+}) => {
   return (
     <Card>
       <CardHeader>
@@ -18,6 +22,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({ myRequests }) => {
         <RequestList 
           requests={myRequests} 
           isManager={false}
+          onRequestStatusChange={onRequestStatusChange}
           emptyMessage="You don't have any leave requests."
         />
       </CardContent>

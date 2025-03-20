@@ -1,14 +1,18 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { ManagerView } from '@/components/dashboard/ManagerView';
 import { EmployeeView } from '@/components/dashboard/EmployeeView';
 import { departments, employeeDepartments, mockRequests } from '@/components/dashboard/MockData';
+import { RequestData } from '@/components/dashboard/RequestCard';
 
 // In a real app, we would determine if the user is a manager through authentication
 const Dashboard = () => {
   const [isManager, setIsManager] = useState<boolean>(true); // Default to manager view for demo
+  
+  // Use state to manage requests so we can update them
+  const [requests, setRequests] = useState<RequestData[]>(mockRequests);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,7 +20,7 @@ const Dashboard = () => {
   
   // Apply filters to requests
   const filteredRequests = useMemo(() => {
-    return mockRequests.filter(req => {
+    return requests.filter(req => {
       // Text search filter
       if (searchTerm && !req.employee.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
@@ -29,7 +33,7 @@ const Dashboard = () => {
       
       return true;
     });
-  }, [searchTerm, departmentFilter]);
+  }, [searchTerm, departmentFilter, requests]);
   
   // Filter requests based on status and role
   const pendingRequests = filteredRequests.filter(req => req.status === 'pending');
@@ -41,6 +45,15 @@ const Dashboard = () => {
     setSearchTerm('');
     setDepartmentFilter('all');
   };
+
+  // Handle request status changes
+  const handleRequestStatusChange = useCallback((updatedRequest: RequestData) => {
+    setRequests(prevRequests => 
+      prevRequests.map(req => 
+        req.id === updatedRequest.id ? updatedRequest : req
+      )
+    );
+  }, []);
 
   return (
     <Layout>
@@ -78,6 +91,7 @@ const Dashboard = () => {
               onSearchChange={setSearchTerm}
               onDepartmentChange={setDepartmentFilter}
               onResetFilters={resetFilters}
+              onRequestStatusChange={handleRequestStatusChange}
             />
           ) : (
             <EmployeeView myRequests={myRequests} />

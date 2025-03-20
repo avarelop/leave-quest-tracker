@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RequestList } from '@/components/dashboard/RequestList';
@@ -18,6 +18,7 @@ interface ManagerViewProps {
   onSearchChange: (value: string) => void;
   onDepartmentChange: (value: string) => void;
   onResetFilters: () => void;
+  onRequestStatusChange?: (updatedRequest: RequestData) => void;
 }
 
 export const ManagerView: React.FC<ManagerViewProps> = ({
@@ -31,8 +32,23 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
   onSearchChange,
   onDepartmentChange,
   onResetFilters,
+  onRequestStatusChange,
 }) => {
   const [activeTab, setActiveTab] = useState<string>('pending');
+  
+  // Auto-switch to the appropriate tab when a request status changes
+  const handleRequestStatusChange = useCallback((updatedRequest: RequestData) => {
+    if (onRequestStatusChange) {
+      onRequestStatusChange(updatedRequest);
+    }
+    
+    // Optional: Auto-switch to the tab corresponding to the new status
+    if (updatedRequest.status === 'approved' && activeTab !== 'approved') {
+      setActiveTab('approved');
+    } else if (updatedRequest.status === 'denied' && activeTab !== 'denied') {
+      setActiveTab('denied');
+    }
+  }, [activeTab, onRequestStatusChange]);
 
   return (
     <>
@@ -72,6 +88,7 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
                 <RequestList 
                   requests={pendingRequests} 
                   isManager={true}
+                  onRequestStatusChange={handleRequestStatusChange}
                   emptyMessage={
                     searchTerm || departmentFilter 
                       ? "No pending requests match your filters." 
@@ -83,6 +100,7 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
                 <RequestList 
                   requests={approvedRequests} 
                   isManager={true}
+                  onRequestStatusChange={handleRequestStatusChange}
                   emptyMessage={
                     searchTerm || departmentFilter
                       ? "No approved requests match your filters."
@@ -94,6 +112,7 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
                 <RequestList 
                   requests={deniedRequests} 
                   isManager={true}
+                  onRequestStatusChange={handleRequestStatusChange}
                   emptyMessage={
                     searchTerm || departmentFilter
                       ? "No denied requests match your filters."
