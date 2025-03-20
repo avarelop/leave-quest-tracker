@@ -11,6 +11,49 @@ import { supabase } from '@/integrations/supabase/client';
 import { departments } from '@/components/dashboard/MockData';
 import { toast } from 'sonner';
 
+// Mock vacation requests for Alvaro
+const mockVacationRequests = [
+  {
+    id: '1',
+    employee: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      name: 'Alvaro Valera'
+    },
+    startDate: new Date('2024-04-10'),
+    endDate: new Date('2024-04-15'),
+    reason: 'Family vacation',
+    status: 'approved',
+    requestedOn: new Date('2024-03-01'),
+    createdAt: new Date('2024-03-01')
+  },
+  {
+    id: '2',
+    employee: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      name: 'Alvaro Valera'
+    },
+    startDate: new Date('2024-05-20'),
+    endDate: new Date('2024-05-22'),
+    reason: 'Personal days',
+    status: 'pending',
+    requestedOn: new Date('2024-03-15'),
+    createdAt: new Date('2024-03-15')
+  },
+  {
+    id: '3',
+    employee: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      name: 'Alvaro Valera'
+    },
+    startDate: new Date('2024-02-05'),
+    endDate: new Date('2024-02-07'),
+    reason: 'Medical appointment',
+    status: 'denied',
+    requestedOn: new Date('2024-01-20'),
+    createdAt: new Date('2024-01-20')
+  }
+];
+
 // Convert database vacation request to our app's RequestData format
 const mapVacationRequestToRequestData = (
   vacationRequest: any, 
@@ -55,12 +98,24 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   
+  // Determine if we're using the mock user
+  const isMockUser = currentUser?.id === '550e8400-e29b-41d4-a716-446655440000';
+  
   // Fetch user role and department
   useEffect(() => {
     const fetchUserData = async () => {
       if (!currentUser) return;
       
       try {
+        // For mock user, set predefined values
+        if (isMockUser) {
+          setIsManager(false);
+          setIsAdmin(false);
+          setUserDepartment('Engineering');
+          return;
+        }
+        
+        // For real users, fetch from database
         const { data: userData, error } = await supabase
           .from('users')
           .select('role, department_id, departments(name)')
@@ -84,7 +139,7 @@ const Dashboard = () => {
     };
     
     fetchUserData();
-  }, [currentUser]);
+  }, [currentUser, isMockUser]);
   
   // Fetch vacation requests based on user role
   useEffect(() => {
@@ -94,7 +149,37 @@ const Dashboard = () => {
       setIsLoading(true);
       
       try {
-        // Fetch vacation requests - RLS will handle permissions based on user role
+        // For mock user, use mock data
+        if (isMockUser) {
+          // Get mock requests from localStorage or use default
+          const storedRequests = localStorage.getItem('mockVacationRequests');
+          if (storedRequests) {
+            // Parse stored requests but ensure dates are proper Date objects
+            const parsedRequests = JSON.parse(storedRequests);
+            const fixedDates = parsedRequests.map((req: any) => ({
+              ...req,
+              startDate: new Date(req.startDate),
+              endDate: new Date(req.endDate),
+              requestedOn: new Date(req.requestedOn),
+              createdAt: new Date(req.createdAt)
+            }));
+            setRequests(fixedDates);
+          } else {
+            setRequests(mockVacationRequests);
+            // Store initial mock data
+            localStorage.setItem('mockVacationRequests', JSON.stringify(mockVacationRequests));
+          }
+          
+          // Set mock department
+          setDepartmentEmployees({
+            [currentUser.id]: 'Engineering'
+          });
+          
+          setIsLoading(false);
+          return;
+        }
+        
+        // For real users, fetch from database
         const { data: vacationRequests, error } = await supabase
           .from('vacation_requests')
           .select('*');
@@ -142,7 +227,7 @@ const Dashboard = () => {
     };
     
     fetchRequests();
-  }, [currentUser]);
+  }, [currentUser, isMockUser]);
   
   // Apply filters to requests
   const filteredRequests = useMemo(() => {
@@ -181,7 +266,25 @@ const Dashboard = () => {
     if (!currentUser) return;
     
     try {
-      // Update the request in the database
+      // For mock user, update localStorage
+      if (isMockUser) {
+        setRequests(prevRequests => 
+          prevRequests.map(req => 
+            req.id === updatedRequest.id ? updatedRequest : req
+          )
+        );
+        
+        // Update in localStorage
+        const updatedRequests = requests.map(req => 
+          req.id === updatedRequest.id ? updatedRequest : req
+        );
+        localStorage.setItem('mockVacationRequests', JSON.stringify(updatedRequests));
+        
+        toast.success(`Request ${updatedRequest.status} successfully`);
+        return;
+      }
+      
+      // For real users, update in database
       const { error } = await supabase
         .from('vacation_requests')
         .update({ 
@@ -204,7 +307,57 @@ const Dashboard = () => {
       console.error('Error updating request status:', error);
       toast.error('Failed to update request status');
     }
-  }, [currentUser]);
+  }, [currentUser, isMockUser, requests]);
+  
+  // Handle form submission for new vacation requests
+  const handleNewRequest = (newRequestData: {
+    startDate: Date;
+    endDate: Date;
+    reason: string;
+  }) => {
+    if (!currentUser) return;
+    
+    try {
+      const now = new Date();
+      
+      // Create a new request object
+      const newRequest: RequestData = {
+        id: `mock-${Date.now()}`, // Generate a unique ID
+        employee: {
+          id: currentUser.id,
+          name: currentUser.user_metadata?.first_name && currentUser.user_metadata?.last_name
+            ? `${currentUser.user_metadata.first_name} ${currentUser.user_metadata.last_name}`
+            : currentUser.email || 'Unknown User',
+        },
+        startDate: newRequestData.startDate,
+        endDate: newRequestData.endDate,
+        reason: newRequestData.reason,
+        status: 'pending',
+        requestedOn: now,
+        createdAt: now
+      };
+      
+      // For mock user, add to localStorage
+      if (isMockUser) {
+        const updatedRequests = [...requests, newRequest];
+        setRequests(updatedRequests);
+        localStorage.setItem('mockVacationRequests', JSON.stringify(updatedRequests));
+        toast.success('Leave request submitted successfully');
+        return;
+      }
+      
+      // For real users, add to database
+      // This will be handled by the RequestForm.tsx component
+    } catch (error) {
+      console.error('Error creating new request:', error);
+      toast.error('Failed to create request');
+    }
+  };
+  
+  // Handle navigation to request form
+  const handleNavigateToRequestForm = () => {
+    navigate('/request-form');
+  };
   
   if (isLoading) {
     return (
@@ -229,15 +382,21 @@ const Dashboard = () => {
             </p>
           </div>
           
-          {isAdmin && (
-            <Button 
-              variant="outline" 
-              onClick={() => setIsManager(!isManager)}
-              className="animate-fade-in"
-            >
-              Switch to {isManager ? 'Employee' : 'Manager'} View
+          <div className="flex gap-2">
+            <Button onClick={handleNavigateToRequestForm}>
+              New Request
             </Button>
-          )}
+            
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                onClick={() => setIsManager(!isManager)}
+                className="animate-fade-in"
+              >
+                Switch to {isManager ? 'Employee' : 'Manager'} View
+              </Button>
+            )}
+          </div>
         </div>
         
         <div className="grid gap-4">

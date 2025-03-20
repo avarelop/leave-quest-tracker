@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
@@ -51,6 +52,9 @@ const RequestForm = () => {
     }
   }, [isAuthenticated, currentUser, navigate]);
 
+  // Check if using mock user
+  const isMockUser = currentUser?.id === '550e8400-e29b-41d4-a716-446655440000';
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -67,11 +71,44 @@ const RequestForm = () => {
     }
     
     try {
-      // Format dates for Postgres
+      // For mock user, store in localStorage
+      if (isMockUser) {
+        // Get existing mock requests
+        const storedRequests = localStorage.getItem('mockVacationRequests');
+        let mockRequests = storedRequests ? JSON.parse(storedRequests) : [];
+        
+        // Create new request
+        const now = new Date();
+        const newRequest = {
+          id: `mock-${Date.now()}`,
+          employee: {
+            id: currentUser.id,
+            name: `${currentUser.user_metadata?.first_name} ${currentUser.user_metadata?.last_name}`,
+          },
+          startDate: values.startDate,
+          endDate: values.endDate,
+          reason: values.reason,
+          status: 'pending',
+          requestedOn: now,
+          createdAt: now
+        };
+        
+        // Add to array and save
+        mockRequests.push(newRequest);
+        localStorage.setItem('mockVacationRequests', JSON.stringify(mockRequests));
+        
+        // Show success message
+        toast.success('Leave request submitted successfully');
+        
+        // Navigate back to dashboard
+        navigate('/dashboard');
+        return;
+      }
+      
+      // For real users, submit to Supabase
       const formattedStartDate = format(values.startDate, 'yyyy-MM-dd');
       const formattedEndDate = format(values.endDate, 'yyyy-MM-dd');
       
-      // Submit to Supabase
       const { error } = await supabase
         .from('vacation_requests')
         .insert({

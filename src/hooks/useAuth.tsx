@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -47,8 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Special case for alvaro.valera@samara.energy
       if (email === 'alvaro.valera@samara.energy' && password === 'alvaro1234') {
         // Create a mock user and session for this specific login
+        // Using a proper UUID format for the mock user ID
         const mockUser = {
-          id: 'alvaro-mock-id',
+          id: '550e8400-e29b-41d4-a716-446655440000', // Valid UUID format
           email: 'alvaro.valera@samara.energy',
           user_metadata: {
             first_name: 'Alvaro',
