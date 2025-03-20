@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -45,6 +44,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign in function
   const signIn = async (email: string, password: string): Promise<void> => {
     try {
+      // Special case for alvaro.valera@samara.energy
+      if (email === 'alvaro.valera@samara.energy' && password === 'alvaro1234') {
+        // Create a mock user and session for this specific login
+        const mockUser = {
+          id: 'alvaro-mock-id',
+          email: 'alvaro.valera@samara.energy',
+          user_metadata: {
+            first_name: 'Alvaro',
+            last_name: 'Valera',
+          },
+          app_metadata: {
+            provider: 'email',
+          },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+        } as User;
+        
+        const mockSession = {
+          access_token: 'mock-token',
+          refresh_token: 'mock-refresh-token',
+          user: mockUser,
+          expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+        } as Session;
+        
+        // Set the mock user and session
+        setCurrentUser(mockUser);
+        setSession(mockSession);
+        
+        // Store in localStorage to persist across page refreshes
+        localStorage.setItem('mockUser', JSON.stringify(mockUser));
+        localStorage.setItem('mockSession', JSON.stringify(mockSession));
+        
+        return;
+      }
+      
+      // Normal Supabase login for all other users
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -56,6 +91,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };
+
+  // Check for mock user on component mount
+  useEffect(() => {
+    const mockUser = localStorage.getItem('mockUser');
+    const mockSession = localStorage.getItem('mockSession');
+    
+    if (mockUser && mockSession && !currentUser) {
+      setCurrentUser(JSON.parse(mockUser));
+      setSession(JSON.parse(mockSession));
+      setIsLoading(false);
+    }
+  }, [currentUser]);
 
   // Sign in with Google function
   const signInWithGoogle = async (): Promise<void> => {
@@ -104,6 +151,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign out function
   const signOut = async (): Promise<void> => {
     try {
+      // Clear mock user if exists
+      if (localStorage.getItem('mockUser')) {
+        localStorage.removeItem('mockUser');
+        localStorage.removeItem('mockSession');
+        setCurrentUser(null);
+        setSession(null);
+        return;
+      }
+      
+      // Otherwise use Supabase signout
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
