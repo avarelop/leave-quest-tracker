@@ -1,16 +1,11 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  isManager?: boolean;
-  photoURL?: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   currentUser: User | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -22,128 +17,96 @@ interface AuthContextType {
 // Create a context for authentication
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Mock users for demo purposes
-const MOCK_USERS: { [key: string]: User & { password: string } } = {
-  'admin@example.com': { 
-    id: '101', 
-    name: 'John Doe', 
-    email: 'admin@example.com', 
-    password: 'password123', 
-    isManager: true 
-  },
-  'employee@example.com': { 
-    id: '102', 
-    name: 'Jane Smith', 
-    email: 'employee@example.com', 
-    password: 'password123', 
-    isManager: false 
-  }
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for user in localStorage on initial load
+  // Set up auth state listener and check for existing session
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setCurrentUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user');
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setCurrentUser(session?.user ?? null);
       }
-    }
-    setIsLoading(false);
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setCurrentUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Sign in function
   const signIn = async (email: string, password: string): Promise<void> => {
-    // In a real app, this would make an API call
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const user = MOCK_USERS[email];
-        
-        if (user && user.password === password) {
-          const { password, ...userWithoutPassword } = user;
-          setCurrentUser(userWithoutPassword);
-          localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-          resolve();
-        } else {
-          reject(new Error('Invalid email or password'));
-        }
-      }, 1000); // Simulate network delay
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in:', error);
+      throw error;
+    }
   };
 
   // Sign in with Google function
   const signInWithGoogle = async (): Promise<void> => {
-    // In a real app, this would use Firebase or another OAuth provider
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        try {
-          // Create a mock Google user
-          const googleUser: User = {
-            id: 'google-' + Math.random().toString(36).substring(2, 15),
-            name: 'Google User',
-            email: 'google-user@example.com',
-            isManager: false,
-            photoURL: 'https://lh3.googleusercontent.com/a/default-user'
-          };
-          
-          setCurrentUser(googleUser);
-          localStorage.setItem('user', JSON.stringify(googleUser));
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      }, 1000); // Simulate network delay
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      throw error;
+    }
   };
 
   // Sign up function
   const signUp = async (name: string, email: string, password: string): Promise<void> => {
-    // In a real app, this would make an API call
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (MOCK_USERS[email]) {
-          reject(new Error('Email already in use'));
-          return;
-        }
-        
-        // Create a new user
-        const newUser = {
-          id: Math.random().toString(36).substring(2, 15),
-          name,
-          email,
-          password,
-          isManager: false // Default to regular employee
-        };
-        
-        // Add to mock database
-        MOCK_USERS[email] = newUser;
-        
-        // Store user in state and localStorage (without password)
-        const { password: _, ...userWithoutPassword } = newUser;
-        setCurrentUser(userWithoutPassword);
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-        
-        resolve();
-      }, 1000); // Simulate network delay
-    });
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: name.split(' ')[0],
+            last_name: name.split(' ').slice(1).join(' ') || '',
+          },
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing up:', error);
+      throw error;
+    }
   };
 
   // Sign out function
   const signOut = async (): Promise<void> => {
-    setCurrentUser(null);
-    localStorage.removeItem('user');
-    return Promise.resolve();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
   };
 
   // Value provided by the context
   const value: AuthContextType = {
     currentUser,
+    session,
     isLoading,
     isAuthenticated: !!currentUser,
     signIn,

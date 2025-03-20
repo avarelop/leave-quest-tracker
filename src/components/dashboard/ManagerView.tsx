@@ -1,11 +1,12 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RequestList } from '@/components/dashboard/RequestList';
 import { RequestData } from '@/components/dashboard/RequestCard';
 import { FilterSection } from './FilterSection';
 import { TeamVacationPlanning } from './TeamVacationPlanning';
+import { useDepartments } from '@/hooks/useDepartments';
 
 interface ManagerViewProps {
   filteredRequests: RequestData[];
@@ -26,7 +27,6 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
   pendingRequests,
   approvedRequests,
   deniedRequests,
-  departments,
   searchTerm,
   departmentFilter,
   onSearchChange,
@@ -35,6 +35,10 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
   onRequestStatusChange,
 }) => {
   const [activeTab, setActiveTab] = useState<string>('pending');
+  const { departments } = useDepartments();
+  
+  // Convert departments to string array for the filter
+  const departmentNames = departments.map(dept => dept.name);
   
   // Auto-switch to the appropriate tab when a request status changes
   const handleRequestStatusChange = useCallback((updatedRequest: RequestData) => {
@@ -56,7 +60,7 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
       <FilterSection 
         searchTerm={searchTerm}
         departmentFilter={departmentFilter}
-        departments={departments}
+        departments={departmentNames}
         onSearchChange={onSearchChange}
         onDepartmentChange={onDepartmentChange}
         onResetFilters={onResetFilters}
@@ -128,7 +132,7 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
       {/* Team Vacation Planning */}
       <TeamVacationPlanning 
         requests={filteredRequests}
-        departments={departments}
+        departments={departmentNames}
       />
     </>
   );

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 import {
   Form,
@@ -41,6 +42,14 @@ const formSchema = z.object({
 
 const RequestForm = () => {
   const navigate = useNavigate();
+  const { currentUser, isAuthenticated } = useAuth();
+  
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !currentUser) {
+      navigate('/sign-in');
+    }
+  }, [isAuthenticated, currentUser, navigate]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,15 +60,39 @@ const RequestForm = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Here you would typically submit the form to your API
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!currentUser) {
+      toast.error('You must be logged in to submit a request');
+      return;
+    }
     
-    // Show success message
-    toast.success('Leave request submitted successfully');
-    
-    // Navigate back to dashboard
-    navigate('/');
+    try {
+      // Format dates for Postgres
+      const formattedStartDate = format(values.startDate, 'yyyy-MM-dd');
+      const formattedEndDate = format(values.endDate, 'yyyy-MM-dd');
+      
+      // Submit to Supabase
+      const { error } = await supabase
+        .from('vacation_requests')
+        .insert({
+          user_id: currentUser.id,
+          start_date: formattedStartDate,
+          end_date: formattedEndDate,
+          reason: values.reason,
+          status: 'pending'
+        });
+      
+      if (error) throw error;
+      
+      // Show success message
+      toast.success('Leave request submitted successfully');
+      
+      // Navigate back to dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      toast.error('Failed to submit leave request');
+    }
   }
 
   return (
@@ -184,7 +217,7 @@ const RequestForm = () => {
                   <div className="flex justify-end space-x-2 w-full">
                     <Button 
                       variant="outline" 
-                      onClick={() => navigate('/')}
+                      onClick={() => navigate('/dashboard')}
                       type="button"
                     >
                       Cancel

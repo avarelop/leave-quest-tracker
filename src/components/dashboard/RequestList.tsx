@@ -5,6 +5,7 @@ import { RejectReasonModal } from './RejectReasonModal';
 import { StatusChangeModal } from './StatusChangeModal';
 import { RequestStatus } from './StatusBadge';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RequestListProps {
   requests: RequestData[];
@@ -35,24 +36,37 @@ export const RequestList: React.FC<RequestListProps> = ({
     ? requestsData.find(req => req.id === selectedRequestId) 
     : null;
 
-  const handleApprove = (id: string) => {
-    const updatedRequests = requestsData.map(req => 
-      req.id === id ? { ...req, status: 'approved' as RequestStatus } : req
-    );
-    
-    // Find the updated request to pass to the parent component
-    const updatedRequest = updatedRequests.find(req => req.id === id);
-    
-    // Update the local state
-    setRequestsData(updatedRequests);
-    
-    // Notify the parent component about the status change
-    if (updatedRequest && onRequestStatusChange) {
-      onRequestStatusChange(updatedRequest);
+  const handleApprove = async (id: string) => {
+    try {
+      // Update in database
+      const { error } = await supabase
+        .from('vacation_requests')
+        .update({ status: 'approved', updated_at: new Date().toISOString() })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // If successful, update local state
+      const updatedRequests = requestsData.map(req => 
+        req.id === id ? { ...req, status: 'approved' as RequestStatus } : req
+      );
+      
+      // Find the updated request to pass to the parent component
+      const updatedRequest = updatedRequests.find(req => req.id === id);
+      
+      // Update the local state
+      setRequestsData(updatedRequests);
+      
+      // Notify the parent component about the status change
+      if (updatedRequest && onRequestStatusChange) {
+        onRequestStatusChange(updatedRequest);
+      }
+      
+      toast.success('Request approved successfully');
+    } catch (error) {
+      console.error('Error approving request:', error);
+      toast.error('Failed to approve request');
     }
-    
-    toast.success('Request approved successfully');
-    console.log(`Approving request ${id}`);
   };
 
   const handleDeny = (id: string) => {
@@ -66,49 +80,90 @@ export const RequestList: React.FC<RequestListProps> = ({
     setStatusChangeModalOpen(true);
   };
 
-  const handleRejectSubmit = (id: string, reason: string) => {
-    // Update the request status and add the denial reason
-    const updatedRequests = requestsData.map(req => 
-      req.id === id ? { ...req, status: 'denied' as RequestStatus, denialReason: reason } : req
-    );
-    
-    // Find the updated request to pass to the parent component
-    const updatedRequest = updatedRequests.find(req => req.id === id);
-    
-    // Update the local state
-    setRequestsData(updatedRequests);
-    
-    // Notify the parent component about the status change
-    if (updatedRequest && onRequestStatusChange) {
-      onRequestStatusChange(updatedRequest);
+  const handleRejectSubmit = async (id: string, reason: string) => {
+    try {
+      // Update in database
+      const { error } = await supabase
+        .from('vacation_requests')
+        .update({ 
+          status: 'denied', 
+          reason: reason, // Store denial reason in the reason field
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update the request status and add the denial reason
+      const updatedRequests = requestsData.map(req => 
+        req.id === id ? { ...req, status: 'denied' as RequestStatus, denialReason: reason } : req
+      );
+      
+      // Find the updated request to pass to the parent component
+      const updatedRequest = updatedRequests.find(req => req.id === id);
+      
+      // Update the local state
+      setRequestsData(updatedRequests);
+      
+      // Notify the parent component about the status change
+      if (updatedRequest && onRequestStatusChange) {
+        onRequestStatusChange(updatedRequest);
+      }
+      
+      toast.success('Request denied successfully');
+    } catch (error) {
+      console.error('Error denying request:', error);
+      toast.error('Failed to deny request');
     }
-    
-    console.log(`Denying request ${id} with reason: ${reason}`);
   };
   
-  const handleStatusChange = (id: string, newStatus: RequestStatus, reason?: string) => {
-    // Update the request status in our local state
-    const updatedRequests = requestsData.map(req => 
-      req.id === id ? { 
-        ...req, 
+  const handleStatusChange = async (id: string, newStatus: RequestStatus, reason?: string) => {
+    try {
+      // Prepare the update data
+      const updateData: any = { 
         status: newStatus,
-        // Add denial reason if provided
-        ...(reason ? { denialReason: reason } : {})
-      } : req
-    );
-    
-    // Find the updated request to pass to the parent component
-    const updatedRequest = updatedRequests.find(req => req.id === id);
-    
-    // Update the local state
-    setRequestsData(updatedRequests);
-    
-    // Notify the parent component about the status change
-    if (updatedRequest && onRequestStatusChange) {
-      onRequestStatusChange(updatedRequest);
+        updated_at: new Date().toISOString()
+      };
+      
+      // Include reason if provided
+      if (reason) {
+        updateData.reason = reason;
+      }
+      
+      // Update in database
+      const { error } = await supabase
+        .from('vacation_requests')
+        .update(updateData)
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update the request status in our local state
+      const updatedRequests = requestsData.map(req => 
+        req.id === id ? { 
+          ...req, 
+          status: newStatus,
+          // Add denial reason if provided
+          ...(reason ? { denialReason: reason } : {})
+        } : req
+      );
+      
+      // Find the updated request to pass to the parent component
+      const updatedRequest = updatedRequests.find(req => req.id === id);
+      
+      // Update the local state
+      setRequestsData(updatedRequests);
+      
+      // Notify the parent component about the status change
+      if (updatedRequest && onRequestStatusChange) {
+        onRequestStatusChange(updatedRequest);
+      }
+      
+      toast.success(`Request ${newStatus} successfully`);
+    } catch (error) {
+      console.error('Error updating request status:', error);
+      toast.error('Failed to update request status');
     }
-    
-    console.log(`Changing request ${id} status to ${newStatus}${reason ? ` with reason: ${reason}` : ''}`);
   };
 
   // Update component to handle empty requests array properly
