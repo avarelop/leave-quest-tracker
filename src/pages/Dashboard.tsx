@@ -22,11 +22,12 @@ const mapVacationRequestToRequestData = (
       id: userData.id,
       name: `${userData.first_name} ${userData.last_name}`
     },
-    startDate: vacationRequest.start_date,
-    endDate: vacationRequest.end_date,
+    startDate: new Date(vacationRequest.start_date),
+    endDate: new Date(vacationRequest.end_date),
     reason: vacationRequest.reason,
     status: vacationRequest.status,
-    createdAt: vacationRequest.created_at
+    requestedOn: new Date(vacationRequest.created_at),
+    createdAt: new Date(vacationRequest.created_at)
   };
 };
 

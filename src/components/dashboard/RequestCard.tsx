@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar, User, MoreVertical } from 'lucide-react';
@@ -28,6 +27,7 @@ export interface RequestData {
   reason: string;
   requestedOn: Date;
   denialReason?: string;
+  createdAt?: Date; // Add this field to fix the error in Dashboard.tsx
 }
 
 interface RequestCardProps {
