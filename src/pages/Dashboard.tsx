@@ -12,7 +12,7 @@ const Dashboard = () => {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
   
   // Apply filters to requests
   const filteredRequests = useMemo(() => {
@@ -23,7 +23,7 @@ const Dashboard = () => {
       }
       
       // Department filter
-      if (departmentFilter && employeeDepartments[req.employee.id] !== departmentFilter) {
+      if (departmentFilter !== 'all' && employeeDepartments[req.employee.id] !== departmentFilter) {
         return false;
       }
       
@@ -39,7 +39,7 @@ const Dashboard = () => {
 
   const resetFilters = () => {
     setSearchTerm('');
-    setDepartmentFilter('');
+    setDepartmentFilter('all');
   };
 
   return (
