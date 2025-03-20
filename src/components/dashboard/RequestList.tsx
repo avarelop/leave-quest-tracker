@@ -36,9 +36,7 @@ export const RequestList: React.FC<RequestListProps> = ({
       )
     );
     
-    // Here you would typically call an API to approve the request
     toast.success('Request approved successfully');
-    // In a real application, you would send an email notification here
     console.log(`Approving request ${id}`);
   };
 
@@ -61,9 +59,7 @@ export const RequestList: React.FC<RequestListProps> = ({
       )
     );
     
-    // Here you would typically call an API to deny the request
     console.log(`Denying request ${id} with reason: ${reason}`);
-    // In a real application, you would send an email with the reason here
   };
   
   const handleStatusChange = (id: string, newStatus: RequestStatus) => {
@@ -74,12 +70,11 @@ export const RequestList: React.FC<RequestListProps> = ({
       )
     );
     
-    // Here you would typically call an API to update the status
     console.log(`Changing request ${id} status to ${newStatus}`);
-    // In a real application, you would send an email notification here
   };
 
-  if (requestsData.length === 0) {
+  // Update component to handle empty requests array properly
+  if (!requests || requests.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
         <p className="text-muted-foreground">{emptyMessage}</p>

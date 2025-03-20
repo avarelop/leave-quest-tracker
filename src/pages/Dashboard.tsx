@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { RequestList } from '@/components/dashboard/RequestList';
@@ -8,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { VacationCalendar } from '@/components/calendar/VacationCalendar';
 import { Input } from '@/components/ui/input';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -87,7 +86,6 @@ const mockRequests: RequestData[] = [
 ];
 
 // In a real app, we would determine if the user is a manager through authentication
-// For this demo, we'll use a state toggle
 const Dashboard = () => {
   const [isManager, setIsManager] = useState<boolean>(true); // Default to manager view for demo
   const [activeTab, setActiveTab] = useState<string>('pending');
