@@ -16,6 +16,14 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Calendar view for employees - now on the left */}
+      <VacationCalendar 
+        requests={myRequests.filter(req => req.status === 'approved')}
+        isManager={false}
+        className="h-full"
+        calendarClassName="w-full"
+      />
+      
       <Card className="h-full">
         <CardHeader>
           <CardTitle>My Leave Requests</CardTitle>
@@ -29,14 +37,6 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
           />
         </CardContent>
       </Card>
-      
-      {/* Calendar view for employees */}
-      <VacationCalendar 
-        requests={myRequests.filter(req => req.status === 'approved')}
-        isManager={false}
-        className="h-full"
-        calendarClassName="w-full"
-      />
     </div>
   );
 };
