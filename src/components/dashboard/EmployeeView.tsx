@@ -23,7 +23,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
   const deniedRequests = myRequests.filter(req => req.status === 'denied');
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
       {/* Calendar view for employees - on the left */}
       <VacationCalendar 
         requests={myRequests.filter(req => req.status === 'approved')}
