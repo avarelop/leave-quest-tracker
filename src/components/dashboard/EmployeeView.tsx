@@ -70,16 +70,16 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-10 gap-6">
-        {/* Calendar view for employees - with reduced width (30%) */}
+        {/* Calendar view for employees - with reduced width (30%) and increased height */}
         <VacationCalendar 
           requests={approvedRequests}
           isManager={false}
-          className="col-span-3 h-auto max-h-[400px]"
-          calendarClassName="w-full scale-90 transform origin-top"
+          className="col-span-3 h-auto max-h-[500px]"
+          calendarClassName="w-full scale-95 transform origin-top"
         />
         
-        {/* Leave Balance - on the right with increased width (70%) */}
-        <Card className="col-span-7 animate-slide-up h-auto max-h-[400px]">
+        {/* Leave Balance - on the right with increased width (70%) and increased height */}
+        <Card className="col-span-7 animate-slide-up h-auto max-h-[500px]">
           <CardHeader className="pb-2">
             <CardTitle>Leave Balance</CardTitle>
           </CardHeader>
