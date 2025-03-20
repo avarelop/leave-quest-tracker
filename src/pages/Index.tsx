@@ -1,10 +1,13 @@
 
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Calendar, LayoutDashboard } from 'lucide-react';
+import { Calendar, LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <Layout>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] text-center px-4">
@@ -21,18 +24,37 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up delay-200">
-            <Link to="/dashboard">
-              <Button size="lg" className="w-full sm:w-auto">
-                <LayoutDashboard className="mr-2 h-5 w-5" />
-                Go to Dashboard
-              </Button>
-            </Link>
-            <Link to="/request">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                <Calendar className="mr-2 h-5 w-5" />
-                Request Time Off
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    <LayoutDashboard className="mr-2 h-5 w-5" />
+                    Go to Dashboard
+                  </Button>
+                </Link>
+                <Link to="/request">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    <Calendar className="mr-2 h-5 w-5" />
+                    Request Time Off
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/sign-in">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/sign-up">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Create an Account
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
         
