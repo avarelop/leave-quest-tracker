@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RequestList } from '@/components/dashboard/RequestList';
 import { RequestData } from '@/components/dashboard/RequestCard';
@@ -18,31 +18,68 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>('all');
   
+  // Calculate leave balance based on request statuses
+  const [leaveBalance, setLeaveBalance] = useState({
+    totalDays: 25,
+    usedDays: 0,
+    pendingDays: 0,
+  });
+  
   // Filter requests by status for the tabs
   const pendingRequests = myRequests.filter(req => req.status === 'pending');
   const approvedRequests = myRequests.filter(req => req.status === 'approved');
   const deniedRequests = myRequests.filter(req => req.status === 'denied');
 
-  // Mock user data for leave balance
-  const user = {
-    totalDays: 25,
-    usedDays: 10,
-    pendingDays: 5,
+  // Update leave balance whenever requests change
+  useEffect(() => {
+    // Count days for each request
+    const calculateDays = (request: RequestData) => {
+      const start = new Date(request.startDate);
+      const end = new Date(request.endDate);
+      // Simple calculation: difference in days (including weekends for simplicity)
+      return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    };
+    
+    // Calculate used and pending days
+    let usedDays = 0;
+    let pendingDays = 0;
+    
+    myRequests.forEach(request => {
+      const days = calculateDays(request);
+      if (request.status === 'approved') {
+        usedDays += days;
+      } else if (request.status === 'pending') {
+        pendingDays += days;
+      }
+    });
+    
+    setLeaveBalance({
+      totalDays: 25, // Fixed total for demo
+      usedDays,
+      pendingDays
+    });
+  }, [myRequests]);
+
+  // Custom handler for request status changes to update balance immediately
+  const handleRequestStatusChange = (updatedRequest: RequestData) => {
+    if (onRequestStatusChange) {
+      onRequestStatusChange(updatedRequest);
+    }
   };
 
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Calendar view for employees - on the left */}
+        {/* Calendar view for employees - with reduced height */}
         <VacationCalendar 
-          requests={myRequests.filter(req => req.status === 'approved')}
+          requests={approvedRequests}
           isManager={false}
-          className="h-full"
-          calendarClassName="w-full"
+          className="h-auto max-h-[400px]" // Reduced height
+          calendarClassName="w-full scale-90 transform origin-top" // Scaled down
         />
         
         {/* Leave Balance - on the right */}
-        <Card className="animate-slide-up">
+        <Card className="animate-slide-up h-auto max-h-[400px]"> {/* Match height with calendar */}
           <CardHeader className="pb-2">
             <CardTitle>Leave Balance</CardTitle>
           </CardHeader>
@@ -50,17 +87,17 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col items-center justify-center p-4 rounded-md bg-secondary">
                 <Calendar className="h-6 w-6 text-primary mb-1" />
-                <div className="text-2xl font-bold">{user.totalDays}</div>
+                <div className="text-2xl font-bold">{leaveBalance.totalDays}</div>
                 <div className="text-xs text-muted-foreground text-center">Total Days</div>
               </div>
               <div className="flex flex-col items-center justify-center p-4 rounded-md bg-secondary">
                 <Clock className="h-6 w-6 text-status-pending mb-1" />
-                <div className="text-2xl font-bold">{user.pendingDays}</div>
+                <div className="text-2xl font-bold">{leaveBalance.pendingDays}</div>
                 <div className="text-xs text-muted-foreground text-center">Pending</div>
               </div>
               <div className="flex flex-col items-center justify-center p-4 rounded-md bg-secondary">
                 <Calendar className="h-6 w-6 text-status-approved mb-1" />
-                <div className="text-2xl font-bold">{user.usedDays}</div>
+                <div className="text-2xl font-bold">{leaveBalance.usedDays}</div>
                 <div className="text-xs text-muted-foreground text-center">Used</div>
               </div>
             </div>
@@ -68,16 +105,16 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
             <div className="relative pt-2">
               <div className="text-sm mb-2 flex justify-between">
                 <span>Leave Usage</span>
-                <span className="text-muted-foreground">{Math.floor((user.usedDays / user.totalDays) * 100)}%</span>
+                <span className="text-muted-foreground">{Math.floor((leaveBalance.usedDays / leaveBalance.totalDays) * 100)}%</span>
               </div>
               <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-primary rounded-full" 
-                  style={{ width: `${(user.usedDays / user.totalDays) * 100}%` }}
+                  style={{ width: `${(leaveBalance.usedDays / leaveBalance.totalDays) * 100}%` }}
                 />
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {user.totalDays - user.usedDays - user.pendingDays} days remaining
+                {leaveBalance.totalDays - leaveBalance.usedDays - leaveBalance.pendingDays} days remaining
               </div>
             </div>
           </CardContent>
@@ -113,7 +150,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
                 <RequestList 
                   requests={myRequests} 
                   isManager={false}
-                  onRequestStatusChange={onRequestStatusChange}
+                  onRequestStatusChange={handleRequestStatusChange}
                   emptyMessage="You don't have any leave requests."
                 />
               </TabsContent>
@@ -121,7 +158,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
                 <RequestList 
                   requests={pendingRequests} 
                   isManager={false}
-                  onRequestStatusChange={onRequestStatusChange}
+                  onRequestStatusChange={handleRequestStatusChange}
                   emptyMessage="You don't have any pending requests."
                 />
               </TabsContent>
@@ -129,7 +166,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
                 <RequestList 
                   requests={approvedRequests} 
                   isManager={false}
-                  onRequestStatusChange={onRequestStatusChange}
+                  onRequestStatusChange={handleRequestStatusChange}
                   emptyMessage="You don't have any approved requests."
                 />
               </TabsContent>
@@ -137,7 +174,7 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
                 <RequestList 
                   requests={deniedRequests} 
                   isManager={false}
-                  onRequestStatusChange={onRequestStatusChange}
+                  onRequestStatusChange={handleRequestStatusChange}
                   emptyMessage="You don't have any denied requests."
                 />
               </TabsContent>
