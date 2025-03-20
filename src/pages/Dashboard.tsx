@@ -57,7 +57,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Vacation Dashboard</h1>
@@ -78,7 +78,7 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        <div className="grid gap-6">
+        <div className="grid gap-4">
           {isManager ? (
             <ManagerView 
               filteredRequests={filteredRequests}
