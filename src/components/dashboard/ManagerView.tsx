@@ -3,9 +3,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RequestList } from '@/components/dashboard/RequestList';
-import { VacationCalendar } from '@/components/calendar/VacationCalendar';
 import { RequestData } from '@/components/dashboard/RequestCard';
 import { FilterSection } from './FilterSection';
+import { TeamVacationPlanning } from './TeamVacationPlanning';
 
 interface ManagerViewProps {
   filteredRequests: RequestData[];
@@ -125,10 +125,10 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
         </CardContent>
       </Card>
       
-      {/* Calendar */}
-      <VacationCalendar 
+      {/* Team Vacation Planning */}
+      <TeamVacationPlanning 
         requests={filteredRequests}
-        isManager={true}
+        departments={departments}
       />
     </>
   );

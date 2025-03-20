@@ -94,7 +94,10 @@ const Dashboard = () => {
               onRequestStatusChange={handleRequestStatusChange}
             />
           ) : (
-            <EmployeeView myRequests={myRequests} />
+            <EmployeeView 
+              myRequests={myRequests} 
+              onRequestStatusChange={handleRequestStatusChange}
+            />
           )}
         </div>
       </div>

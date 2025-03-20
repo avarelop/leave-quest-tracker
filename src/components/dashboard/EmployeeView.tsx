@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RequestList } from '@/components/dashboard/RequestList';
 import { RequestData } from '@/components/dashboard/RequestCard';
+import { VacationCalendar } from '@/components/calendar/VacationCalendar';
 
 interface EmployeeViewProps {
   myRequests: RequestData[];
@@ -14,18 +15,28 @@ export const EmployeeView: React.FC<EmployeeViewProps> = ({
   onRequestStatusChange 
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>My Leave Requests</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <RequestList 
-          requests={myRequests} 
-          isManager={false}
-          onRequestStatusChange={onRequestStatusChange}
-          emptyMessage="You don't have any leave requests."
-        />
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>My Leave Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RequestList 
+            requests={myRequests} 
+            isManager={false}
+            onRequestStatusChange={onRequestStatusChange}
+            emptyMessage="You don't have any leave requests."
+          />
+        </CardContent>
+      </Card>
+      
+      {/* Calendar view for employees */}
+      <VacationCalendar 
+        requests={myRequests.filter(req => req.status === 'approved')}
+        isManager={false}
+        className="max-w-4xl mx-auto"
+        calendarClassName="w-full"
+      />
+    </div>
   );
 };
