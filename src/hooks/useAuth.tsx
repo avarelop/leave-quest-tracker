@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   isManager?: boolean;
+  photoURL?: string;
 }
 
 interface AuthContextType {
@@ -13,6 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -75,6 +77,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Sign in with Google function
+  const signInWithGoogle = async (): Promise<void> => {
+    // In a real app, this would use Firebase or another OAuth provider
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          // Create a mock Google user
+          const googleUser: User = {
+            id: 'google-' + Math.random().toString(36).substring(2, 15),
+            name: 'Google User',
+            email: 'google-user@example.com',
+            isManager: false,
+            photoURL: 'https://lh3.googleusercontent.com/a/default-user'
+          };
+          
+          setCurrentUser(googleUser);
+          localStorage.setItem('user', JSON.stringify(googleUser));
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      }, 1000); // Simulate network delay
+    });
+  };
+
   // Sign up function
   const signUp = async (name: string, email: string, password: string): Promise<void> => {
     // In a real app, this would make an API call
@@ -120,6 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     isAuthenticated: !!currentUser,
     signIn,
+    signInWithGoogle,
     signUp,
     signOut
   };
