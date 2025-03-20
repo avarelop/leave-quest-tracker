@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { 
-  Calendar, 
+  Calendar,
   Home, 
   PlusCircle, 
   User, 
@@ -44,7 +43,6 @@ export const Header = () => {
   const navLinks = [
     { name: 'Home', path: '/', icon: <Home className="h-4 w-4" /> },
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { name: 'Calendar', path: '/calendar', icon: <Calendar className="h-4 w-4" /> },
     { name: 'Profile', path: '/profile', icon: <User className="h-4 w-4" /> }
   ];
 
